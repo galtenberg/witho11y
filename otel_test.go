@@ -25,4 +25,9 @@ func TestExecuteOperation_Success(t *testing.T) {
   ctx := context.Background()
   err := ExecuteOperation(ctx, mockDep)
   assert.NoError(t, err)
+
+  spans := sr.Ended()
+  assert.Len(t, spans, 1)
+  assert.Equal(t, "succeeded", spans[0].Attributes())// ["dependency.status"])
+  //.Attributes()["dependency.status"].AsString())
 }
