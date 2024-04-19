@@ -1,0 +1,25 @@
+package otelmock
+
+import (
+  "context"
+  "go.opentelemetry.io/otel"
+  "go.opentelemetry.io/otel/attribute"
+  "go.opentelemetry.io/otel/trace"
+)
+
+func ExecuteOperation(ctx context.Context, dep Dependency) error {
+  tracer := otel.Tracer("example-tracer")
+  var span trace.Span
+  ctx, span = tracer.Start(ctx, "ExecuteOperation")
+  defer span.End()
+
+  result, err := dep.CallDependency(ctx)
+  if err != nil {
+    span.SetAttributes(attribute.String("dependency.status", "failed"))
+    span.RecordError(err)
+    return err
+  }
+
+  span.SetAttributes(attribute.String("dependency.status", "succeeded"), attribute.String("dependency.result", result))
+  return nil
+}
