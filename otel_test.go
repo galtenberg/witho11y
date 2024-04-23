@@ -3,6 +3,7 @@ package otelmock
 import (
   "context"
   "testing"
+  "errors"
 
   "github.com/stretchr/testify/assert"
 
@@ -36,4 +37,8 @@ func TestExecuteOperation_Success(t *testing.T) {
   spans := sr.Ended()
   assert.Len(t, spans, 1)
   assert.Equal(t, "succeeded", AttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
+
+  mockDep.EXPECT().CallDependency(gomock.Any()).Return("", errors.New("failure"))
+  err = ExecuteOperation(ctx, mockDep)
+  assert.Error(t, err)
 }
