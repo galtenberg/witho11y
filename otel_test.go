@@ -41,4 +41,8 @@ func TestExecuteOperation_Success(t *testing.T) {
   mockDep.EXPECT().CallDependency(gomock.Any()).Return("", errors.New("failure"))
   err = ExecuteOperation(ctx, mockDep)
   assert.Error(t, err)
+
+  spans = sr.Ended()
+  assert.Len(t, spans, 2)
+  assert.Equal(t, "failed", AttributesToMap(spans[1].Attributes())["dependency.status"].AsString())
 }
