@@ -7,11 +7,18 @@ import (
   "github.com/stretchr/testify/assert"
 
   "go.opentelemetry.io/otel"
+  "go.opentelemetry.io/otel/attribute"
   "go.opentelemetry.io/otel/sdk/trace"
   "go.opentelemetry.io/otel/sdk/trace/tracetest"
 
   gomock "go.uber.org/mock/gomock"
 )
+
+func AttributesToMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value {
+  attrMap := make(map[attribute.Key]attribute.Value)
+  for _, attr := range attrs { attrMap[attr.Key] = attr.Value }
+  return attrMap
+}
 
 func TestExecuteOperation_Success(t *testing.T) {
   ctrl := gomock.NewController(t)
@@ -28,6 +35,5 @@ func TestExecuteOperation_Success(t *testing.T) {
 
   spans := sr.Ended()
   assert.Len(t, spans, 1)
-  assert.Equal(t, "succeeded", spans[0].Attributes()[0].Value.AsString())
-  //assert.Equal(t, "succeeded", spans[0].Attributes()["dependency.status"].Value.AsString())
+  assert.Equal(t, "succeeded", AttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
 }
