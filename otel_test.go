@@ -15,16 +15,16 @@ import (
   gomock "go.uber.org/mock/gomock"
 )
 
-func AttributesToMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value {
+func SpanAttributesToMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value {
   attrMap := make(map[attribute.Key]attribute.Value)
   for _, attr := range attrs { attrMap[attr.Key] = attr.Value }
   return attrMap
 }
 
-func TestExecuteOperation_Success(t *testing.T) {
+func TestUnreliableDependency(t *testing.T) {
   ctrl := gomock.NewController(t)
-  mockDep := NewMockDependency(ctrl)
-  mockDep.EXPECT().CallDependency(gomock.Any()).Return("success result", nil)
+  mockDep := NewMockUnreliableDependency(ctrl)
+  mockDep.EXPECT().CallUnreliableDependency(gomock.Any()).Return("success result", nil)
 
   sr := tracetest.NewSpanRecorder()
   tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
@@ -36,13 +36,13 @@ func TestExecuteOperation_Success(t *testing.T) {
 
   spans := sr.Ended()
   assert.Len(t, spans, 1)
-  assert.Equal(t, "succeeded", AttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
+  assert.Equal(t, "succeeded", SpanAttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
 
-  mockDep.EXPECT().CallDependency(gomock.Any()).Return("", errors.New("failure"))
+  mockDep.EXPECT().CallUnreliableDependency(gomock.Any()).Return("", errors.New("failure"))
   err = ExecuteOperation(ctx, mockDep)
   assert.Error(t, err)
 
   spans = sr.Ended()
   assert.Len(t, spans, 2)
-  assert.Equal(t, "failed", AttributesToMap(spans[1].Attributes())["dependency.status"].AsString())
+  assert.Equal(t, "failed", SpanAttributesToMap(spans[1].Attributes())["dependency.status"].AsString())
 }

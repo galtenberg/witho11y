@@ -7,13 +7,13 @@ import (
   "go.opentelemetry.io/otel/trace"
 )
 
-func ExecuteOperation(ctx context.Context, dep Dependency) error {
+func ExecuteOperation(ctx context.Context, dep UnreliableDependency) error {
   tracer := otel.Tracer("example-tracer")
   var span trace.Span
   ctx, span = tracer.Start(ctx, "ExecuteOperation")
   defer span.End()
 
-  result, err := dep.CallDependency(ctx)
+  result, err := dep.CallUnreliableDependency(ctx)
   if err != nil {
     span.SetAttributes(attribute.String("dependency.status", "failed"))
     span.RecordError(err)
