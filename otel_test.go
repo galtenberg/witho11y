@@ -24,14 +24,14 @@ func SpanAttributesToMap(attrs []attribute.KeyValue) map[attribute.Key]attribute
 func TestUnreliableDependency(t *testing.T) {
   ctrl := gomock.NewController(t)
   mockDep := NewMockUnreliableDependency(ctrl)
-  mockDep.EXPECT().CallUnreliableDependency(gomock.Any()).Return("success result", nil)
+  mockDep.EXPECT().CallUnreliableDependency(gomock.Any(), "param1").Return("success result", nil)
 
   sr := tracetest.NewSpanRecorder()
   tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
   otel.SetTracerProvider(tp)
 
   ctx := context.Background()
-  err := TryUnreliableDependency(ctx, mockDep)
+  err := TryUnreliableDependency(ctx, mockDep, "param1")
   assert.NoError(t, err)
 
   spans := sr.Ended()

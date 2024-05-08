@@ -3,5 +3,5 @@ package otelmock
 import "context"
 
 type UnreliableDependency interface {
-  CallUnreliableDependency(ctx context.Context) (string, error)
+  CallUnreliableDependency(ctx context.Context, params ...interface{}) (string, error)
 }

@@ -40,16 +40,21 @@ func (m *MockUnreliableDependency) EXPECT() *MockUnreliableDependencyMockRecorde
 }
 
 // CallUnreliableDependency mocks base method.
-func (m *MockUnreliableDependency) CallUnreliableDependency(ctx context.Context) (string, error) {
+func (m *MockUnreliableDependency) CallUnreliableDependency(ctx context.Context, params ...any) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CallUnreliableDependency", ctx)
+	varargs := []any{ctx}
+	for _, a := range params {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CallUnreliableDependency", varargs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CallUnreliableDependency indicates an expected call of CallUnreliableDependency.
-func (mr *MockUnreliableDependencyMockRecorder) CallUnreliableDependency(ctx any) *gomock.Call {
+func (mr *MockUnreliableDependencyMockRecorder) CallUnreliableDependency(ctx any, params ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallUnreliableDependency", reflect.TypeOf((*MockUnreliableDependency)(nil).CallUnreliableDependency), ctx)
+	varargs := append([]any{ctx}, params...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallUnreliableDependency", reflect.TypeOf((*MockUnreliableDependency)(nil).CallUnreliableDependency), varargs...)
 }
