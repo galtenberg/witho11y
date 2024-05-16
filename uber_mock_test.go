@@ -31,7 +31,7 @@ func TestUnreliableDependency(t *testing.T) {
   otel.SetTracerProvider(tp)
 
   ctx := context.Background()
-  err := TryUnreliableDependency(ctx, mockDep, "param1")
+  err := ObserveUnreliableDependency(ctx, mockDep, "param1")
   assert.NoError(t, err)
 
   spans := sr.Ended()
@@ -39,7 +39,7 @@ func TestUnreliableDependency(t *testing.T) {
   assert.Equal(t, "succeeded", SpanAttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
 
   mockDep.EXPECT().CallUnreliableDependency(gomock.Any()).Return("", errors.New("failure"))
-  err = TryUnreliableDependency(ctx, mockDep)
+  err = ObserveUnreliableDependency(ctx, mockDep)
   assert.Error(t, err)
 
   spans = sr.Ended()
