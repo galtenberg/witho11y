@@ -7,102 +7,89 @@ import (
 
   "github.com/stretchr/testify/mock"
   "github.com/stretchr/testify/require"
+  "github.com/stretchr/testify/assert"
 
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
-  "go.opentelemetry.io/otel/trace"
+  //"go.opentelemetry.io/otel/trace"
+  //"go.opentelemetry.io/otel/oteltest"
+  "go.opentelemetry.io/otel/sdk/trace"
+  "go.opentelemetry.io/otel/sdk/trace/tracetest"
 
   //"go.opentelemetry.io/otel/trace/embedded"
 )
 
-// MockTracerProvider is a mock implementation of trace.TracerProvider
-type MockTracerProvider struct {
-  mock.Mock
+// MockBusinessLogic is a mock implementation of the business logic function.
+type MockBusinessLogic struct {
+    mock.Mock
 }
 
-//type MockTracerProvider interface{ tracerProvider() }
-
-func (m *MockTracerProvider) Tracer(name string, opts ...trace.TracerOption) trace.Tracer {
-  args := m.Called(name, opts)
-  return args.Get(0).(trace.Tracer)
+func (m *MockBusinessLogic) Execute(ctx context.Context, params ...interface{}) error {
+    args := m.Called(ctx, params)
+    return args.Error(0)
 }
-
-func (m *MockTracerProvider) tracerProvider() {}
-
-// MockTracer is a mock implementation of trace.Tracer
-type MockTracer struct {
-  mock.Mock
-}
-
-func (m *MockTracer) Start(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-  args := m.Called(ctx, name, opts)
-  return args.Get(0).(context.Context), args.Get(1).(trace.Span)
-}
-
-// MockSpan is a mock implementation of trace.Span
-type MockSpan struct {
-  mock.Mock
-}
-
-func (m *MockSpan) End(options ...trace.SpanEndOption) {
-  m.Called(options)
-}
-
-func (m *MockSpan) RecordError(err error, options ...trace.EventOption) {
-  m.Called(err, options)
-}
-
-func (m *MockSpan) SetAttributes(attributes ...attribute.KeyValue) {
-  m.Called(attributes)
-}
-
-// Other methods of trace.Span can be mocked as needed...
 
 func TestWithTelemetry_Success(t *testing.T) {
-  mockTracerProvider := &MockTracerProvider{}
-  mockTracer := &MockTracer{}
-  mockSpan := &MockSpan{}
+  sr := tracetest.NewSpanRecorder()
+  tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
+    //tp := trace.NewTracerProvider()
+    otel.SetTracerProvider(tp)
 
-  //var _ trace.TracerProvider = (*MockTracerProvider)(nil)
-  otel.SetTracerProvider(mockTracerProvider)
+    mockBusinessLogic := &MockBusinessLogic{}
+    mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(nil)
 
-  mockTracerProvider.On("Tracer", "example-tracer", mock.Anything).Return(mockTracer)
-  mockTracer.On("Start", mock.Anything, "example-span", mock.Anything).Return(context.Background(), mockSpan)
-  mockSpan.On("End", mock.Anything)
-  mockSpan.On("SetAttributes", mock.Anything)
-  mockSpan.On("RecordError", mock.Anything, mock.Anything)
+    wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
+    err := wrappedLogic(context.Background(), "param1", 42)
 
-  wrappedLogic := WithTelemetry("example-span", ExampleBusinessLogic)
-  err := wrappedLogic(context.Background(), "param1", 42)
+    require.NoError(t, err)
 
-  require.NoError(t, err)
-  mockTracerProvider.AssertExpectations(t)
-  mockTracer.AssertExpectations(t)
-  mockSpan.AssertExpectations(t)
+    //spans := tp.ForceFlush(context.Background())
+    //require.Len(t, spans, 1)
+    //span := spans[0]
+  spans := sr.Ended()
+  assert.Len(t, spans, 1)
+  //assert.Equal(t, "succeeded", SpanAttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
+
+    span := spans[0]
+    require.Equal(t, "example-span", span.Name())
+    attrs := span.Attributes()
+    require.Contains(t, attrs, attribute.String("param.0", "param1"))
+    require.Contains(t, attrs, attribute.String("param.1", "42"))
+
+    mockBusinessLogic.AssertExpectations(t)
 }
 
 func TestWithTelemetry_Error(t *testing.T) {
-  mockTracerProvider := &MockTracerProvider{}
-  mockTracer := &MockTracer{}
-  mockSpan := &MockSpan{}
+  sr := tracetest.NewSpanRecorder()
+  tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
+    //tp := trace.NewTracerProvider()
+    otel.SetTracerProvider(tp)
 
-  otel.SetTracerProvider(mockTracerProvider)
+    mockBusinessLogic := &MockBusinessLogic{}
+    mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(fmt.Errorf("an error occurred"))
 
-  mockTracerProvider.On("Tracer", "example-tracer", mock.Anything).Return(mockTracer)
-  mockTracer.On("Start", mock.Anything, "example-span", mock.Anything).Return(context.Background(), mockSpan)
-  mockSpan.On("End", mock.Anything)
-  mockSpan.On("SetAttributes", mock.Anything)
-  mockSpan.On("RecordError", mock.Anything, mock.Anything)
+    wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
+    err := wrappedLogic(context.Background(), "param1", 42)
 
-  errorLogic := func(ctx context.Context, params ...interface{}) error {
-    return fmt.Errorf("an error occurred")
-  }
+    require.Error(t, err)
 
-  wrappedLogic := WithTelemetry("example-span", errorLogic)
-  err := wrappedLogic(context.Background(), "param1", 42)
+  spans := sr.Ended()
+  assert.Len(t, spans, 1)
+    span := spans[0]
 
-  require.Error(t, err)
-  mockTracerProvider.AssertExpectations(t)
-  mockTracer.AssertExpectations(t)
-  mockSpan.AssertExpectations(t)
+    require.Equal(t, "example-span", span.Name())
+    require.False(t, span.EndTime().IsZero(), "expected span to be ended")
+
+    attrs := span.Attributes()
+    require.Contains(t, attrs, attribute.String("param.0", "param1"))
+    require.Contains(t, attrs, attribute.String("param.1", "42"))
+
+    events := span.Events()
+    require.Len(t, events, 1)
+    event := events[0]
+    require.Equal(t, "exception", event.Name)
+    //require.Contains(t, event.Attributes, attribute.String("exception.type", "error"))
+    //require.Contains(t, event.Attributes, attribute.String("exception.message", "an error occurred"))
+
+    mockBusinessLogic.AssertExpectations(t)
 }
