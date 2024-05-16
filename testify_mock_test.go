@@ -42,10 +42,10 @@ func TestWithTelemetry_Success(t *testing.T) {
   assert.Len(t, spans, 1)
 
   span := spans[0]
-  assert.Equal(t, "succeeded", SpanAttributesToMap(span.Attributes())["dependency.status"].AsString())
+  attrs := span.Attributes()
+  require.Contains(t, attrs, attribute.String("dependency.status", "succeeded"))
 
   require.Equal(t, "example-span", span.Name())
-  attrs := span.Attributes()
   require.Contains(t, attrs, attribute.String("param.0", "param1"))
   require.Contains(t, attrs, attribute.String("param.1", "42"))
 
@@ -80,8 +80,7 @@ func TestWithTelemetry_Error(t *testing.T) {
   require.Len(t, events, 1)
   event := events[0]
   require.Equal(t, "exception", event.Name)
-  //require.Contains(t, event.Attributes, attribute.String("exception.type", "error"))
-  //require.Contains(t, event.Attributes, attribute.String("exception.message", "an error occurred"))
+  require.Contains(t, event.Attributes, attribute.String("exception.message", "an error occurred"))
 
   mockBusinessLogic.AssertExpectations(t)
 }
