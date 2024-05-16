@@ -11,85 +11,77 @@ import (
 
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
-  //"go.opentelemetry.io/otel/trace"
-  //"go.opentelemetry.io/otel/oteltest"
   "go.opentelemetry.io/otel/sdk/trace"
   "go.opentelemetry.io/otel/sdk/trace/tracetest"
-
-  //"go.opentelemetry.io/otel/trace/embedded"
 )
 
 // MockBusinessLogic is a mock implementation of the business logic function.
 type MockBusinessLogic struct {
-    mock.Mock
+  mock.Mock
 }
 
 func (m *MockBusinessLogic) Execute(ctx context.Context, params ...interface{}) error {
-    args := m.Called(ctx, params)
-    return args.Error(0)
+  args := m.Called(ctx, params)
+  return args.Error(0)
 }
 
 func TestWithTelemetry_Success(t *testing.T) {
   sr := tracetest.NewSpanRecorder()
   tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
-    //tp := trace.NewTracerProvider()
-    otel.SetTracerProvider(tp)
+  otel.SetTracerProvider(tp)
 
-    mockBusinessLogic := &MockBusinessLogic{}
-    mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(nil)
+  mockBusinessLogic := &MockBusinessLogic{}
+  mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(nil)
 
-    wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
-    err := wrappedLogic(context.Background(), "param1", 42)
+  wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
+  err := wrappedLogic(context.Background(), "param1", 42)
 
-    require.NoError(t, err)
+  require.NoError(t, err)
 
-    //spans := tp.ForceFlush(context.Background())
-    //require.Len(t, spans, 1)
-    //span := spans[0]
   spans := sr.Ended()
   assert.Len(t, spans, 1)
-  //assert.Equal(t, "succeeded", SpanAttributesToMap(spans[0].Attributes())["dependency.status"].AsString())
 
-    span := spans[0]
-    require.Equal(t, "example-span", span.Name())
-    attrs := span.Attributes()
-    require.Contains(t, attrs, attribute.String("param.0", "param1"))
-    require.Contains(t, attrs, attribute.String("param.1", "42"))
+  span := spans[0]
+  assert.Equal(t, "succeeded", SpanAttributesToMap(span.Attributes())["dependency.status"].AsString())
 
-    mockBusinessLogic.AssertExpectations(t)
+  require.Equal(t, "example-span", span.Name())
+  attrs := span.Attributes()
+  require.Contains(t, attrs, attribute.String("param.0", "param1"))
+  require.Contains(t, attrs, attribute.String("param.1", "42"))
+
+  mockBusinessLogic.AssertExpectations(t)
 }
 
 func TestWithTelemetry_Error(t *testing.T) {
   sr := tracetest.NewSpanRecorder()
   tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
-    //tp := trace.NewTracerProvider()
-    otel.SetTracerProvider(tp)
+  otel.SetTracerProvider(tp)
 
-    mockBusinessLogic := &MockBusinessLogic{}
-    mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(fmt.Errorf("an error occurred"))
+  mockBusinessLogic := &MockBusinessLogic{}
+  mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(fmt.Errorf("an error occurred"))
 
-    wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
-    err := wrappedLogic(context.Background(), "param1", 42)
+  wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
+  err := wrappedLogic(context.Background(), "param1", 42)
 
-    require.Error(t, err)
+  require.Error(t, err)
 
   spans := sr.Ended()
   assert.Len(t, spans, 1)
-    span := spans[0]
+  span := spans[0]
 
-    require.Equal(t, "example-span", span.Name())
-    require.False(t, span.EndTime().IsZero(), "expected span to be ended")
+  require.Equal(t, "example-span", span.Name())
+  require.False(t, span.EndTime().IsZero(), "expected span to be ended")
 
-    attrs := span.Attributes()
-    require.Contains(t, attrs, attribute.String("param.0", "param1"))
-    require.Contains(t, attrs, attribute.String("param.1", "42"))
+  attrs := span.Attributes()
+  require.Contains(t, attrs, attribute.String("param.0", "param1"))
+  require.Contains(t, attrs, attribute.String("param.1", "42"))
 
-    events := span.Events()
-    require.Len(t, events, 1)
-    event := events[0]
-    require.Equal(t, "exception", event.Name)
-    //require.Contains(t, event.Attributes, attribute.String("exception.type", "error"))
-    //require.Contains(t, event.Attributes, attribute.String("exception.message", "an error occurred"))
+  events := span.Events()
+  require.Len(t, events, 1)
+  event := events[0]
+  require.Equal(t, "exception", event.Name)
+  //require.Contains(t, event.Attributes, attribute.String("exception.type", "error"))
+  //require.Contains(t, event.Attributes, attribute.String("exception.message", "an error occurred"))
 
-    mockBusinessLogic.AssertExpectations(t)
+  mockBusinessLogic.AssertExpectations(t)
 }
