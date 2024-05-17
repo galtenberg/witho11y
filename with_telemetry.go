@@ -6,7 +6,16 @@ import (
 
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
+  "go.opentelemetry.io/otel/trace"
 )
+
+func paramsToSpanAttributes(span trace.Span, params ...interface{}) {
+  attrs := make([]attribute.KeyValue, len(params))
+  for i, param := range params {
+    attrs[i] = attribute.String(fmt.Sprintf("param.%d", i), fmt.Sprintf("%v", param))
+  }
+  span.SetAttributes(attrs...)
+}
 
 func WithTelemetry(spanName string, businessLogic func(ctx context.Context, params ...interface{}) error) func(ctx context.Context, params ...interface{}) error {
   return func(ctx context.Context, params ...interface{}) error {
@@ -14,12 +23,10 @@ func WithTelemetry(spanName string, businessLogic func(ctx context.Context, para
     ctx, span := tracer.Start(ctx, spanName)
     defer span.End()
 
-    attrs := make([]attribute.KeyValue, len(params))
-    for i, param := range params {
-      attrs[i] = attribute.String(fmt.Sprintf("param.%d", i), fmt.Sprintf("%v", param))
-    }
-    span.SetAttributes(attrs...)
+    // Save param keys/values in tracing span
+    paramsToSpanAttributes(span, params...)
 
+    // Now officially call the wrapped function
     err := businessLogic(ctx, params...)
     if err != nil {
       span.SetAttributes(attribute.String("dependency.status", "failed"))
