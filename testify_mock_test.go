@@ -51,15 +51,8 @@ func TestWithTelemetry_Success(t *testing.T) {
 
   spans := sr.Ended()
   assert.Len(t, spans, 1)
-
-  span := spans[0]
-  require.Equal(t, "observe-reliable", span.Name())
-
-  expectedAttrs := map[string]string {
-    "param.0": "param1",
-    "param.1": "42",
-  }
-  verifySpanAttributes(t, span, expectedAttrs)
+  require.Equal(t, "observe-reliable", spans[0].Name())
+  verifySpanAttributes(t, spans[0], map[string]string{ "param.0": "param1", "param.1": "42" })
 
   mockBusinessLogic.AssertExpectations(t)
 }
@@ -77,22 +70,14 @@ func TestWithTelemetry_Error(t *testing.T) {
 
   spans := sr.Ended()
   assert.Len(t, spans, 1)
-  span := spans[0]
+  require.Equal(t, "observe-unreliable", spans[0].Name())
+  require.False(t, spans[0].EndTime().IsZero(), "expected span to be ended")
+  verifySpanAttributes(t, spans[0], map[string]string{ "param.0": "param1", "param.1": "42" })
 
-  require.Equal(t, "observe-unreliable", span.Name())
-  require.False(t, span.EndTime().IsZero(), "expected span to be ended")
-
-  expectedAttrs := map[string]string {
-    "param.0": "param1",
-    "param.1": "42",
-  }
-  verifySpanAttributes(t, span, expectedAttrs)
-
-  events := span.Events()
+  events := spans[0].Events()
   require.Len(t, events, 1)
-  event := events[0]
-  require.Equal(t, "exception", event.Name)
-  require.Contains(t, event.Attributes, attribute.String("exception.message", "an error occurred"))
+  require.Equal(t, "exception", events[0].Name)
+  require.Contains(t, events[0].Attributes, attribute.String("exception.message", "an error occurred"))
 
   mockBusinessLogic.AssertExpectations(t)
 }
