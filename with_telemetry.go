@@ -6,12 +6,11 @@ import (
 
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
-  "go.opentelemetry.io/otel/trace"
 )
 
 func WithTelemetry(spanName string, businessLogic func(ctx context.Context, params ...interface{}) error) func(ctx context.Context, params ...interface{}) error {
   return func(ctx context.Context, params ...interface{}) error {
-    tracer := otel.Tracer("example-tracer")
+    tracer := otel.Tracer("observe-tracer")
     ctx, span := tracer.Start(ctx, spanName)
     defer span.End()
 
@@ -38,7 +37,7 @@ func ExampleBusinessLogic(ctx context.Context, params ...interface{}) error {
 }
 
 func ObserveUnreliableDependency2() {
-  wrappedLogic := WithTelemetry("example-span", ExampleBusinessLogic)
+  wrappedLogic := WithTelemetry("observe-unreliable-1", ExampleBusinessLogic)
   //err := WithTelemetry(context.Background(), "param1", 42)
   wrappedLogic(context.Background(), "param1", 42)
 }

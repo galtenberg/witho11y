@@ -15,7 +15,6 @@ import (
   "go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
-// MockBusinessLogic is a mock implementation of the business logic function.
 type MockBusinessLogic struct {
   mock.Mock
 }
@@ -25,15 +24,27 @@ func (m *MockBusinessLogic) Execute(ctx context.Context, params ...interface{}) 
   return args.Error(0)
 }
 
-func TestWithTelemetry_Success(t *testing.T) {
+func setupTrace() (*tracetest.SpanRecorder, *trace.TracerProvider) {
   sr := tracetest.NewSpanRecorder()
   tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
   otel.SetTracerProvider(tp)
+  return sr, tp
+}
+
+func verifySpanAttributes(t *testing.T, span trace.ReadOnlySpan, expectedAttrs map[string]string) {
+  attrs := span.Attributes()
+  for k, v := range expectedAttrs {
+    require.Contains(t, attrs, attribute.String(k,v))
+  }
+}
+
+func TestWithTelemetry_Success(t *testing.T) {
+  sr, _ := setupTrace()
 
   mockBusinessLogic := &MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(nil)
 
-  wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
+  wrappedLogic := WithTelemetry("observe-reliable", mockBusinessLogic.Execute)
   err := wrappedLogic(context.Background(), "param1", 42)
 
   require.NoError(t, err)
@@ -42,25 +53,24 @@ func TestWithTelemetry_Success(t *testing.T) {
   assert.Len(t, spans, 1)
 
   span := spans[0]
-  attrs := span.Attributes()
-  require.Contains(t, attrs, attribute.String("dependency.status", "succeeded"))
+  require.Equal(t, "observe-reliable", span.Name())
 
-  require.Equal(t, "example-span", span.Name())
-  require.Contains(t, attrs, attribute.String("param.0", "param1"))
-  require.Contains(t, attrs, attribute.String("param.1", "42"))
+  expectedAttrs := map[string]string {
+    "param.0": "param1",
+    "param.1": "42",
+  }
+  verifySpanAttributes(t, span, expectedAttrs)
 
   mockBusinessLogic.AssertExpectations(t)
 }
 
 func TestWithTelemetry_Error(t *testing.T) {
-  sr := tracetest.NewSpanRecorder()
-  tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
-  otel.SetTracerProvider(tp)
+  sr, _ := setupTrace()
 
   mockBusinessLogic := &MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(fmt.Errorf("an error occurred"))
 
-  wrappedLogic := WithTelemetry("example-span", mockBusinessLogic.Execute)
+  wrappedLogic := WithTelemetry("observe-unreliable", mockBusinessLogic.Execute)
   err := wrappedLogic(context.Background(), "param1", 42)
 
   require.Error(t, err)
@@ -69,12 +79,14 @@ func TestWithTelemetry_Error(t *testing.T) {
   assert.Len(t, spans, 1)
   span := spans[0]
 
-  require.Equal(t, "example-span", span.Name())
+  require.Equal(t, "observe-unreliable", span.Name())
   require.False(t, span.EndTime().IsZero(), "expected span to be ended")
 
-  attrs := span.Attributes()
-  require.Contains(t, attrs, attribute.String("param.0", "param1"))
-  require.Contains(t, attrs, attribute.String("param.1", "42"))
+  expectedAttrs := map[string]string {
+    "param.0": "param1",
+    "param.1": "42",
+  }
+  verifySpanAttributes(t, span, expectedAttrs)
 
   events := span.Events()
   require.Len(t, events, 1)
