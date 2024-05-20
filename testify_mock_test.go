@@ -45,7 +45,7 @@ func TestWithTelemetry_Success(t *testing.T) {
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(nil)
 
   wrappedLogic := WithTelemetry("observe-reliable", mockBusinessLogic.Execute)
-  err := wrappedLogic(context.Background(), "param1", 42)
+  _, err := wrappedLogic(context.Background(), "param1", 42)
 
   require.NoError(t, err)
 
@@ -64,7 +64,7 @@ func TestWithTelemetry_Error(t *testing.T) {
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(fmt.Errorf("an error occurred"))
 
   wrappedLogic := WithTelemetry("observe-unreliable", mockBusinessLogic.Execute)
-  err := wrappedLogic(context.Background(), "param1", 42)
+  _, err := wrappedLogic(context.Background(), "param1", 42)
 
   require.Error(t, err)
 

@@ -2,40 +2,26 @@ package otelmock
 
 import (
   "context"
-  "fmt"
 
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
-  "go.opentelemetry.io/otel/trace"
 )
 
-func paramsToSpanAttributes(span trace.Span, params ...interface{}) {
-  attrs := make([]attribute.KeyValue, len(params))
-  for i, param := range params {
-    attrs[i] = attribute.String(fmt.Sprintf("param.%d", i), fmt.Sprintf("%v", param))
-  }
-  span.SetAttributes(attrs...)
-}
-
-func WithTelemetry(spanName string, businessLogic func(ctx context.Context, params ...interface{}) error) func(ctx context.Context, params ...interface{}) error {
-  return func(ctx context.Context, params ...interface{}) error {
+func WithTelemetry(spanName string, businessLogic any) func(ctx context.Context, params ...any) ([]any, error) {
+  return func(ctx context.Context, params ...any) ([]any, error) {
     tracer := otel.Tracer("observe-tracer")
     ctx, span := tracer.Start(ctx, spanName)
     defer span.End()
 
-    // Save param keys/values in tracing span
-    paramsToSpanAttributes(span, params...)
+    setSpanAttributes(span, params...)
 
-    // Now officially call the wrapped function
-    err := businessLogic(ctx, params...)
+    results, err := callWrapped(businessLogic, ctx, params)
     if err != nil {
-      span.SetAttributes(attribute.String("dependency.status", "failed"))
-      span.RecordError(err)
+      return nil, err
     }
 
     span.SetAttributes(attribute.String("dependency.status", "succeeded"))
-    //span.SetAttributes(attribute.String("dependency.status", "succeeded"), attribute.String("dependency.result", result))
-    return err
+    return extractResults(results, span)
   }
 }
 
