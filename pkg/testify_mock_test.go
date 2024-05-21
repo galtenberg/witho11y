@@ -46,7 +46,7 @@ func TestWithTraceSpan_Success(t *testing.T) {
   mockBusinessLogic := &MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{"result1", "result2"}, nil)
 
-  wrappedLogic := otelmock.WithTraceSpan("observe-reliable", mockBusinessLogic.Execute)
+  wrappedLogic := otelmock.WithTraceSpanOtel("observe-reliable", mockBusinessLogic.Execute)
   _, err := wrappedLogic(context.Background(), "param1", 42)
   //results, err := wrappedLogic(context.Background(), "param1", 42)
   //assert.Equal(t, []any{"result1", "result2"}, results[0])
@@ -69,7 +69,7 @@ func TestWithTraceSpan_Error(t *testing.T) {
   mockBusinessLogic := &MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{nil}, fmt.Errorf("an error occurred"))
 
-  wrappedLogic := otelmock.WithTraceSpan("observe-unreliable", mockBusinessLogic.Execute)
+  wrappedLogic := otelmock.WithTraceSpanOtel("observe-unreliable", mockBusinessLogic.Execute)
   _, err := wrappedLogic(context.Background(), "param1", 42)
 
   require.Error(t, err)

@@ -12,7 +12,7 @@ func ExampleUnreliableDependency(ctx context.Context, params ...any) (int, strin
 }
 
 func ObserveUnreliableDependency() {
-  wrappedFunc := otelmock.WithTraceSpan("observe-unreliable-1", ExampleUnreliableDependency)
+  wrappedFunc := otelmock.WithTraceSpanOtel("observe-unreliable-1", ExampleUnreliableDependency)
   results, _ := wrappedFunc(context.Background(), "param1", 42)
   fmt.Println(results[1].(string))
 }

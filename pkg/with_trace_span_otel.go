@@ -8,7 +8,7 @@ import (
   "go.opentelemetry.io/otel/attribute"
 )
 
-func WithTraceSpan(spanName string, wrappedFunc any) func(ctx context.Context, params ...any) ([]any, error) {
+func WithTraceSpanOtel(spanName string, wrappedFunc any) func(ctx context.Context, params ...any) ([]any, error) {
   return func(ctx context.Context, params ...any) ([]any, error) {
     tracer := otel.Tracer("observe-tracer")
     ctx, span := tracer.Start(ctx, spanName)
@@ -20,10 +20,15 @@ func WithTraceSpan(spanName string, wrappedFunc any) func(ctx context.Context, p
     results, err := callWrapped(wrappedFunc, ctx, params)
     duration := time.Since(startTime)
     if err != nil {
+      span.RecordError(err)
       return nil, err
     }
 
     span.SetAttributes(attribute.String("dependency.status", "succeeded"), attribute.Float64("duration_ms", float64(duration.Milliseconds())))
-    return extractResults(results, span)
+    ret, finalErr := extractResults(results)
+    if finalErr != nil {
+      span.RecordError(finalErr)
+    }
+    return ret, finalErr
   }
 }
