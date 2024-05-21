@@ -7,7 +7,7 @@ import (
   "go.opentelemetry.io/otel/attribute"
 )
 
-func WithTelemetry(spanName string, businessLogic any) func(ctx context.Context, params ...any) ([]any, error) {
+func WithTelemetry(spanName string, wrappedFunc any) func(ctx context.Context, params ...any) ([]any, error) {
   return func(ctx context.Context, params ...any) ([]any, error) {
     tracer := otel.Tracer("observe-tracer")
     ctx, span := tracer.Start(ctx, spanName)
@@ -15,7 +15,7 @@ func WithTelemetry(spanName string, businessLogic any) func(ctx context.Context,
 
     setSpanAttributes(span, params...)
 
-    results, err := callWrapped(businessLogic, ctx, params)
+    results, err := callWrapped(wrappedFunc, ctx, params)
     if err != nil {
       return nil, err
     }
@@ -25,12 +25,12 @@ func WithTelemetry(spanName string, businessLogic any) func(ctx context.Context,
   }
 }
 
-func ExampleBusinessLogic(ctx context.Context, params ...interface{}) error {
-  return nil
+func ExampleBusinessLogic(ctx context.Context, params ...any) (int, string, error) {
+  return 404, "try again", nil
 }
 
-func ObserveUnreliableDependency2() {
-  wrappedLogic := WithTelemetry("observe-unreliable-1", ExampleBusinessLogic)
+func ObserveUnreliableDependency() {
+  wrappedFunc := WithTelemetry("observe-unreliable-1", ExampleBusinessLogic)
   //err := WithTelemetry(context.Background(), "param1", 42)
-  wrappedLogic(context.Background(), "param1", 42)
+  wrappedFunc(context.Background(), "param1", 42)
 }

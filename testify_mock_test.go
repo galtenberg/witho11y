@@ -19,9 +19,9 @@ type MockBusinessLogic struct {
   mock.Mock
 }
 
-func (m *MockBusinessLogic) Execute(ctx context.Context, params ...interface{}) error {
-  args := m.Called(ctx, params)
-  return args.Error(0)
+func (m *MockBusinessLogic) Execute(ctx context.Context, params ...any) error {
+  err := m.Called(ctx, params)
+  return err.Error(0)
 }
 
 func setupTrace() (*tracetest.SpanRecorder, *trace.TracerProvider) {
