@@ -8,7 +8,7 @@ import (
   "go.opentelemetry.io/otel/attribute"
 )
 
-func WithTelemetry(spanName string, wrappedFunc any) func(ctx context.Context, params ...any) ([]any, error) {
+func WithTraceSpan(spanName string, wrappedFunc any) func(ctx context.Context, params ...any) ([]any, error) {
   return func(ctx context.Context, params ...any) ([]any, error) {
     tracer := otel.Tracer("observe-tracer")
     ctx, span := tracer.Start(ctx, spanName)

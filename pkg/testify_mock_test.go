@@ -5,6 +5,8 @@ import (
   "testing"
   "fmt"
 
+  "otelmock/pkg"
+
   "github.com/stretchr/testify/mock"
   "github.com/stretchr/testify/require"
   "github.com/stretchr/testify/assert"
@@ -44,7 +46,7 @@ func TestWithTelemetry_Success(t *testing.T) {
   mockBusinessLogic := &MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{"result1", "result2"}, nil)
 
-  wrappedLogic := WithTelemetry("observe-reliable", mockBusinessLogic.Execute)
+  wrappedLogic := otelmock.WithTraceSpan("observe-reliable", mockBusinessLogic.Execute)
   results, err := wrappedLogic(context.Background(), "param1", 42)
   assert.Equal(t, []any{"result1", "result2"}, results[0])
 
@@ -65,7 +67,7 @@ func TestWithTelemetry_Error(t *testing.T) {
   mockBusinessLogic := &MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{nil}, fmt.Errorf("an error occurred"))
 
-  wrappedLogic := WithTelemetry("observe-unreliable", mockBusinessLogic.Execute)
+  wrappedLogic := otelmock.WithTraceSpan("observe-unreliable", mockBusinessLogic.Execute)
   _, err := wrappedLogic(context.Background(), "param1", 42)
 
   require.Error(t, err)
