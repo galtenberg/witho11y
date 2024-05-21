@@ -27,13 +27,3 @@ func WithTelemetry(spanName string, wrappedFunc any) func(ctx context.Context, p
     return extractResults(results, span)
   }
 }
-
-func ExampleBusinessLogic(ctx context.Context, params ...any) (int, string, error) {
-  return 404, "try again", nil
-}
-
-func ObserveUnreliableDependency() {
-  wrappedFunc := WithTelemetry("observe-unreliable-1", ExampleBusinessLogic)
-  //err := WithTelemetry(context.Background(), "param1", 42)
-  wrappedFunc(context.Background(), "param1", 42)
-}
