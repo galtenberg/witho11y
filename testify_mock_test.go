@@ -19,9 +19,9 @@ type MockBusinessLogic struct {
   mock.Mock
 }
 
-func (m *MockBusinessLogic) Execute(ctx context.Context, params ...any) error {
-  err := m.Called(ctx, params)
-  return err.Error(0)
+func (m *MockBusinessLogic) Execute(ctx context.Context, params ...any) ([]any, error) {
+  args := m.Called(ctx, params)
+  return args.Get(0).([]any), args.Error(1)
 }
 
 func setupTrace() (*tracetest.SpanRecorder, *trace.TracerProvider) {
@@ -42,16 +42,18 @@ func TestWithTelemetry_Success(t *testing.T) {
   sr, _ := setupTrace()
 
   mockBusinessLogic := &MockBusinessLogic{}
-  mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(nil)
+  mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{"result1", "result2"}, nil)
 
   wrappedLogic := WithTelemetry("observe-reliable", mockBusinessLogic.Execute)
-  _, err := wrappedLogic(context.Background(), "param1", 42)
+  results, err := wrappedLogic(context.Background(), "param1", 42)
+  assert.Equal(t, []any{"result1", "result2"}, results[0])
 
   require.NoError(t, err)
 
   spans := sr.Ended()
   assert.Len(t, spans, 1)
   require.Equal(t, "observe-reliable", spans[0].Name())
+  fmt.Println(spans[0])
   verifySpanAttributes(t, spans[0], map[string]string{ "param.0": "param1", "param.1": "42" })
 
   mockBusinessLogic.AssertExpectations(t)
@@ -61,7 +63,7 @@ func TestWithTelemetry_Error(t *testing.T) {
   sr, _ := setupTrace()
 
   mockBusinessLogic := &MockBusinessLogic{}
-  mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return(fmt.Errorf("an error occurred"))
+  mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{nil}, fmt.Errorf("an error occurred"))
 
   wrappedLogic := WithTelemetry("observe-unreliable", mockBusinessLogic.Execute)
   _, err := wrappedLogic(context.Background(), "param1", 42)
