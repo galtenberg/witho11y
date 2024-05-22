@@ -19,18 +19,18 @@ func WithTraceSpanOtel(spanName string, wrappedFunc any) func(ctx context.Contex
     startTime := time.Now()
     otelmock.SetSpanAttributes(span, params...)
 
-    results, err := otelmock.CallWrapped(wrappedFunc, ctx, params)
+    results, _ := otelmock.CallWrapped(wrappedFunc, ctx, params)
     duration := time.Since(startTime)
+
+    span.SetAttributes(
+      attribute.String("dependency.status", "succeeded"),
+      attribute.Float64("duration_ms", float64(duration.Milliseconds())),
+    )
+
+    ret, err := otelmock.ExtractResults(results)
     if err != nil {
       span.RecordError(err)
-      return nil, err
     }
-
-    span.SetAttributes(attribute.String("dependency.status", "succeeded"), attribute.Float64("duration_ms", float64(duration.Milliseconds())))
-    ret, finalErr := otelmock.ExtractResults(results)
-    if finalErr != nil {
-      span.RecordError(finalErr)
-    }
-    return ret, finalErr
+    return ret, err
   }
 }
