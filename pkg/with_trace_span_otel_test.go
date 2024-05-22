@@ -40,7 +40,7 @@ func verifySpanAttributes(t *testing.T, span trace.ReadOnlySpan, expectedAttrs m
   }
 }
 
-func TestWithTraceSpan_Success(t *testing.T) {
+func TestWithTraceSpanOtel_Success(t *testing.T) {
   sr, _ := setupTrace()
 
   mockBusinessLogic := &MockBusinessLogic{}
@@ -63,7 +63,7 @@ func TestWithTraceSpan_Success(t *testing.T) {
   mockBusinessLogic.AssertExpectations(t)
 }
 
-func TestWithTraceSpan_Error(t *testing.T) {
+func TestWithTraceSpanOtel_Error(t *testing.T) {
   sr, _ := setupTrace()
 
   mockBusinessLogic := &MockBusinessLogic{}

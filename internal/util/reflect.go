@@ -5,7 +5,7 @@ import (
   "reflect"
 )
 
-func convertToReflectValues(params []any) []reflect.Value {
+func ConvertToReflectValues(params []any) []reflect.Value {
     values := make([]reflect.Value, len(params))
     for i, param := range params {
         values[i] = reflect.ValueOf(param)
@@ -13,14 +13,14 @@ func convertToReflectValues(params []any) []reflect.Value {
     return values
 }
 
-func callWrapped(wrapped any, ctx context.Context, params []any) ([]reflect.Value, error) {
+func CallWrapped(wrapped any, ctx context.Context, params []any) ([]reflect.Value, error) {
   wrValue := reflect.ValueOf(wrapped)
-  wrParams := append([]reflect.Value{reflect.ValueOf(ctx)}, convertToReflectValues(params)...)
+  wrParams := append([]reflect.Value{reflect.ValueOf(ctx)}, ConvertToReflectValues(params)...)
   results := wrValue.Call(wrParams)
   return results, nil
 }
 
-func extractResults(results []reflect.Value) ([]any, error) {
+func ExtractResults(results []reflect.Value) ([]any, error) {
   finalResults := make([]any, len(results))
   var finalErr error
   for i, result := range results {
