@@ -8,7 +8,7 @@ import (
 
   "go.opentelemetry.io/otel/attribute"
   "go.opentelemetry.io/otel/trace"
-  traceSdk "go.opentelemetry.io/otel/sdk/trace"
+  sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func SetSpanAttributes(span trace.Span, params ...any) {
@@ -19,7 +19,7 @@ func SetSpanAttributes(span trace.Span, params ...any) {
   span.SetAttributes(attrs...)
 }
 
-func VerifySpanAttributes(t *testing.T, span traceSdk.ReadOnlySpan, expectedAttrs map[string]string) {
+func VerifySpanAttributes(t *testing.T, span sdktrace.ReadOnlySpan, expectedAttrs map[string]string) {
   attrs := span.Attributes()
   for k, v := range expectedAttrs {
     require.Contains(t, attrs, attribute.String(k,v))

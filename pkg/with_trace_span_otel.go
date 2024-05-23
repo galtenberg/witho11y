@@ -31,6 +31,7 @@ func WithTraceSpanOtel(spanName string, wrappedFunc any) func(ctx context.Contex
     if err != nil {
       span.RecordError(err)
     }
+
     return ret, err
   }
 }
