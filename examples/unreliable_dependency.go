@@ -11,9 +11,9 @@ func ExampleUnreliableDependency(ctx context.Context, a string, b int) (int, str
   return 404, "You passed in: " + a, nil
 }
 
-func ObserveUnreliableDependency() {
+func ObserveUnreliableDependency(ctx context.Context) {
   results, _ := witho11y.WithTraceSpanOtel("observe-unreliable-1",
-    ExampleUnreliableDependency)(context.Background(), "param1", 99)
+    ExampleUnreliableDependency)(ctx, "param1", 99)
   //wrappedFunc := witho11y.WithTraceSpanOtel("observe-unreliable-1", ExampleUnreliableDependency)
   //results, _ := wrappedFunc(context.Background(), "param1", 99)
 
@@ -21,5 +21,5 @@ func ObserveUnreliableDependency() {
 }
 
 func main() {
-  ObserveUnreliableDependency()
+  ObserveUnreliableDependency(context.Background())
 }
