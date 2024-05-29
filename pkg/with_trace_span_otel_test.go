@@ -1,12 +1,12 @@
-package otelmock
+package witho11y
 
 import (
   "context"
   "testing"
   "fmt"
 
-  util "otelmock/internal/util"
-  "otelmock/pkg"
+  util "witho11y/internal/util"
+  "witho11y/pkg"
 
   "github.com/stretchr/testify/mock"
   "github.com/stretchr/testify/require"
@@ -21,7 +21,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
   mockBusinessLogic := &util.MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{"result1", "result2"}, nil)
 
-  wrappedLogic := otelmock.WithTraceSpanOtel("observe-reliable", mockBusinessLogic.Execute)
+  wrappedLogic := witho11y.WithTraceSpanOtel("observe-reliable", mockBusinessLogic.Execute)
   _, err := wrappedLogic(context.Background(), "param1", 99)
   require.NoError(t, err)
 
@@ -40,7 +40,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Error(t *testing.T) {
   mockBusinessLogic := &util.MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{nil}, fmt.Errorf("an error occurred"))
 
-  wrappedLogic := otelmock.WithTraceSpanOtel("observe-unreliable", mockBusinessLogic.Execute)
+  wrappedLogic := witho11y.WithTraceSpanOtel("observe-unreliable", mockBusinessLogic.Execute)
   _, err := wrappedLogic(context.Background(), "param1", 99)
 
   require.Error(t, err)

@@ -4,7 +4,7 @@ import (
   "context"
   "fmt"
 
-  "otelmock/pkg"
+  "witho11y/pkg"
 )
 
 func ExampleHighLatency(ctx context.Context, params ...any) (int, string, error) {
@@ -12,7 +12,7 @@ func ExampleHighLatency(ctx context.Context, params ...any) (int, string, error)
 }
 
 func ObserveHighLatency() {
-  wrappedFunc := otelmock.WithTraceSpanOtel("observe-latency-1", ExampleHighLatency)
+  wrappedFunc := witho11y.WithTraceSpanOtel("observe-latency-1", ExampleHighLatency)
   results, _ := wrappedFunc(context.Background(), "param1", 99)
   fmt.Println(results[1].(string))
 }

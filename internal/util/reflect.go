@@ -1,4 +1,4 @@
-package otelmock
+package witho11y
 
 import (
   "context"

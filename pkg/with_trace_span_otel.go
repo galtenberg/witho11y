@@ -1,10 +1,10 @@
-package otelmock
+package witho11y
 
 import (
   "context"
   "time"
 
-  "otelmock/internal/util"
+  "witho11y/internal/util"
 
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
@@ -17,9 +17,9 @@ func WithTraceSpanOtel(spanName string, wrappedFunc any) func(ctx context.Contex
     defer span.End()
 
     startTime := time.Now()
-    otelmock.SetSpanAttributes(span, params...)
+    witho11y.SetSpanAttributes(span, params...)
 
-    results, _ := otelmock.CallWrapped(wrappedFunc, ctx, params)
+    results, _ := witho11y.CallWrapped(wrappedFunc, ctx, params)
     duration := time.Since(startTime)
 
     span.SetAttributes(
@@ -27,7 +27,7 @@ func WithTraceSpanOtel(spanName string, wrappedFunc any) func(ctx context.Contex
       attribute.Float64("duration_ms", float64(duration.Milliseconds())),
     )
 
-    ret, err := otelmock.ExtractResults(results)
+    ret, err := witho11y.ExtractResults(results)
     if err != nil {
       span.RecordError(err)
     }
