@@ -16,7 +16,7 @@ import (
 )
 
 func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
-  sr, _ := util.SetupTrace()
+  sr, _ := util.SetupTestTrace()
 
   mockBusinessLogic := &util.MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{"result1", "result2"}, nil)
@@ -35,7 +35,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
 }
 
 func Test_UnreliableDependency_WithTraceSpanOtel_Error(t *testing.T) {
-  sr, _ := util.SetupTrace()
+  sr, _ := util.SetupTestTrace()
 
   mockBusinessLogic := &util.MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{nil}, fmt.Errorf("an error occurred"))

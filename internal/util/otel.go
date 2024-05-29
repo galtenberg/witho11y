@@ -6,10 +6,19 @@ import (
   "testing"
   "github.com/stretchr/testify/require"
 
+  "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/attribute"
   "go.opentelemetry.io/otel/trace"
   sdktrace "go.opentelemetry.io/otel/sdk/trace"
+  "go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+func SetupTestTrace() (*tracetest.SpanRecorder, *sdktrace.TracerProvider) {
+  sr := tracetest.NewSpanRecorder()
+  tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(sr))
+  otel.SetTracerProvider(tp)
+  return sr, tp
+}
 
 func SetSpanAttributes(span trace.Span, params ...any) {
   attrs := make([]attribute.KeyValue, len(params))
