@@ -16,7 +16,7 @@ import (
   "go.opentelemetry.io/otel/attribute"
 )
 
-type TelemetryHooks interface {
+type TelemetryEvents interface {
   Setup(ctx context.Context, name string) context.Context
   AddFields(ctx context.Context, fields map[string]interface{})
   Finish(ctx context.Context)
@@ -110,17 +110,13 @@ func filterFields(fields, subset map[string]interface{}) map[string]interface{} 
   return filtered
 }
 
-func WithTraceSpanOtel(wrappedFunc any, hooks TelemetryHooks, beforeFields, afterFields map[string]interface{}) func(ctx context.Context, params ...any) ([]any, error) {
+func BeforeAfterDurationWrapper(wrappedFunc any, telemetry TelemetryEvents, beforeFields, afterFields map[string]interface{}) func(ctx context.Context, params ...any) ([]any, error) {
   return func(ctx context.Context, params ...any) ([]any, error) {
-    if hooks == nil {
-      hooks = NewOTelTraceWrapper()
-    }
-
     funcName := runtime.FuncForPC(reflect.ValueOf(wrappedFunc).Pointer()).Name()
     spanName := fmt.Sprintf("%s-%d", funcName, time.Now().UnixNano())
 
-    ctx = hooks.Setup(ctx, spanName)
-    defer hooks.Finish(ctx)
+    ctx = telemetry.Setup(ctx, spanName)
+    defer telemetry.Finish(ctx)
 
     startTime := time.Now()
 
@@ -129,21 +125,21 @@ func WithTraceSpanOtel(wrappedFunc any, hooks TelemetryHooks, beforeFields, afte
       fields[fmt.Sprintf("param.%d", i)] = param
     }
 
-    hooks.AddFields(ctx, filterFields(fields, beforeFields))
+    telemetry.AddFields(ctx, filterFields(fields, beforeFields))
 
     results, _ := witho11y.CallWrapped(wrappedFunc, ctx, params)
     duration := time.Since(startTime)
 
-    hooks.AddFields(ctx, filterFields(fields, afterFields))
+    telemetry.AddFields(ctx, filterFields(fields, afterFields))
 
-    hooks.AddFields(ctx, map[string]interface{}{
+    telemetry.AddFields(ctx, map[string]interface{}{
       "dependency.status": "succeeded",
       "duration_ms":       float64(duration.Milliseconds()),
     })
 
     ret, err := witho11y.ExtractResults(results)
     if err != nil {
-      hooks.AddFields(ctx, map[string]interface{}{
+      telemetry.AddFields(ctx, map[string]interface{}{
         "error": err.Error(),
       })
     }
