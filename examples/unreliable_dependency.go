@@ -12,12 +12,10 @@ func ExampleUnreliableDependency(ctx context.Context, a string, b int) (int, str
 }
 
 func ObserveUnreliableDependency(ctx context.Context) {
-  results, _ := witho11y.BeforeAfterDurationWrapper(
-    ExampleUnreliableDependency,
-    witho11y.NewOTelTraceWrapper(),
-    nil,
-    nil,
-  )(ctx, "param1", 99)
+  wrappedFunc := witho11y.BeforeAfterDurationWrapper(
+    ExampleUnreliableDependency, witho11y.NewOTelTraceWrapper(), nil, nil)
+
+  results, _ := wrappedFunc(ctx, "param1", 99)
 
   fmt.Println(results[1].(string))
 }
