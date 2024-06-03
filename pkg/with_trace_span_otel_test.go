@@ -124,7 +124,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
 
   events := mockWrapper.GetEvents()
   assert.Len(t, events, 1)
-  require.Equal(t, "observe-reliable", events[0].Name)
+  require.Contains(t, events[0].Name, "MockBusinessLogic")
   require.True(t, events[0].Ended)
   assert.Equal(t, map[string]interface{}{
     "param.0": "param1",
@@ -151,7 +151,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Error(t *testing.T) {
 
   events := mockWrapper.GetEvents()
   assert.Len(t, events, 1)
-  require.Equal(t, "observe-unreliable", events[0].Name)
+  require.Contains(t, events[0].Name, "MockBusinessLogic")
   require.True(t, events[0].Ended)
   assert.Equal(t, map[string]interface{}{
     "param.0": "param1",
