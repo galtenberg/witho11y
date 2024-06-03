@@ -8,6 +8,7 @@ import (
 
   util "witho11y/internal/util"
   "witho11y/pkg"
+  wrappers "witho11y/pkg/wrappers"
 
   "github.com/stretchr/testify/mock"
   "github.com/stretchr/testify/require"
@@ -72,7 +73,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
   beforeFields := map[string]interface{}{"param.0": nil, "param.1": nil}
   afterFields := map[string]interface{}{"post_param": "value2"}
 
-  wrappedLogic := witho11y.BeforeAfterDurationWrapper(mockBusinessLogic.Execute, mockWrapper, beforeFields, afterFields)
+  wrappedLogic := wrappers.BeforeAfterDurationWrapper(mockBusinessLogic.Execute, mockWrapper, beforeFields, afterFields)
   _, err := wrappedLogic(context.Background(), "param1", 99)
   require.NoError(t, err)
 
@@ -99,7 +100,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Error(t *testing.T) {
   beforeFields := map[string]interface{}{"param.0": nil, "param.1": nil}
   afterFields := map[string]interface{}{"post_param": "value2"}
 
-  wrappedLogic := witho11y.BeforeAfterDurationWrapper(mockBusinessLogic.Execute, mockWrapper, beforeFields, afterFields)
+  wrappedLogic := wrappers.BeforeAfterDurationWrapper(mockBusinessLogic.Execute, mockWrapper, beforeFields, afterFields)
   _, err := wrappedLogic(context.Background(), "param1", 99)
   require.Error(t, err)
 

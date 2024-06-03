@@ -5,6 +5,7 @@ import (
   "fmt"
 
   "witho11y/pkg"
+  wrappers "witho11y/pkg/wrappers"
 )
 
 func ExampleUnreliableDependency(ctx context.Context, a string, b int) (int, string, error) {
@@ -12,7 +13,7 @@ func ExampleUnreliableDependency(ctx context.Context, a string, b int) (int, str
 }
 
 func ObserveUnreliableDependency(ctx context.Context) {
-  wrappedFunc := witho11y.BeforeAfterDurationWrapper(
+  wrappedFunc := wrappers.BeforeAfterDurationWrapper(
     ExampleUnreliableDependency, witho11y.NewOTelTraceWrapper(), nil, nil)
 
   results, _ := wrappedFunc(ctx, "param1", 99)
