@@ -4,7 +4,7 @@ import (
   "context"
   "fmt"
 
-  "witho11y/pkg"
+  telemeters "witho11y/pkg/telemeters"
   wrappers "witho11y/pkg/wrappers"
 )
 
@@ -14,7 +14,7 @@ func ExampleUnreliableDependency(ctx context.Context, a string, b int) (int, str
 
 func ObserveUnreliableDependency(ctx context.Context) {
   wrappedFunc := wrappers.BeforeAfterDurationWrapper(
-    ExampleUnreliableDependency, witho11y.NewPrintScreen(), nil, nil)
+    ExampleUnreliableDependency, telemeters.NewPrintScreen(), nil, nil)
 
   results, _ := wrappedFunc(ctx, "param1", 99)
 

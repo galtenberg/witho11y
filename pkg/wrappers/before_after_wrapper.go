@@ -30,7 +30,7 @@ func filterFields(fields, subset map[string]interface{}) map[string]interface{} 
   return filtered
 }
 
-func BeforeAfterDurationWrapper(wrappedFunc any, telemetry witho11y.TelemetryEvents, beforeFields, afterFields map[string]interface{}) func(ctx context.Context, params ...any) ([]any, error) {
+func BeforeAfterDurationWrapper(wrappedFunc any, telemetry witho11y.Telemeter, beforeFields, afterFields map[string]interface{}) func(ctx context.Context, params ...any) ([]any, error) {
   return func(ctx context.Context, params ...any) ([]any, error) {
     funcName := runtime.FuncForPC(reflect.ValueOf(wrappedFunc).Pointer()).Name()
     spanName := fmt.Sprintf("%s-%d", funcName, time.Now().UnixNano())

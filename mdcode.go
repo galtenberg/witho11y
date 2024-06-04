@@ -42,6 +42,7 @@ func printFileAsMarkdown(path string) {
 		return
 	}
 
-	fmt.Printf("## %s\n\n", path)
-	fmt.Printf("```\n%s\n```\n\n", string(content))
+	fmt.Printf("## %s\n", path)
+	fmt.Printf("\n%s\n\n", string(content))
+	//fmt.Printf("\n```\n%s\n```\n\n", string(content))
 }

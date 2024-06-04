@@ -7,18 +7,18 @@ import (
   "witho11y/pkg"
 )
 
-type MockWrapper struct {
+type MockTelemeter struct {
     events []witho11y.EventData
     mu     sync.Mutex
 }
 
-func NewMockWrapper() *MockWrapper {
-    return &MockWrapper{
+func NewMockTelemeter() *MockTelemeter {
+    return &MockTelemeter{
         events: []witho11y.EventData{},
     }
 }
 
-func (m *MockWrapper) Setup(ctx context.Context, name string) context.Context {
+func (m *MockTelemeter) Setup(ctx context.Context, name string) context.Context {
     event := witho11y.EventData{Name: name, Fields: make(map[string]interface{}), Ended: false}
     m.mu.Lock()
     m.events = append(m.events, event)
@@ -27,7 +27,7 @@ func (m *MockWrapper) Setup(ctx context.Context, name string) context.Context {
     return ctx
 }
 
-func (m *MockWrapper) AddFields(ctx context.Context, fields map[string]interface{}) {
+func (m *MockTelemeter) AddFields(ctx context.Context, fields map[string]interface{}) {
     eventName := ctx.Value("eventName").(string)
     m.mu.Lock()
     defer m.mu.Unlock()
@@ -40,7 +40,7 @@ func (m *MockWrapper) AddFields(ctx context.Context, fields map[string]interface
     }
 }
 
-func (m *MockWrapper) Finish(ctx context.Context) {
+func (m *MockTelemeter) Finish(ctx context.Context) {
     eventName := ctx.Value("eventName").(string)
     m.mu.Lock()
     defer m.mu.Unlock()
@@ -51,7 +51,7 @@ func (m *MockWrapper) Finish(ctx context.Context) {
     }
 }
 
-func (m *MockWrapper) GetEvents() []witho11y.EventData {
+func (m *MockTelemeter) GetEvents() []witho11y.EventData {
     m.mu.Lock()
     defer m.mu.Unlock()
     return m.events

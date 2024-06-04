@@ -6,6 +6,7 @@ import (
   "fmt"
 
   util "witho11y/internal/util"
+  telemeters "witho11y/pkg/telemeters"
   wrappers "witho11y/pkg/wrappers"
 
   "github.com/stretchr/testify/mock"
@@ -14,7 +15,7 @@ import (
 )
 
 func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
-  mockWrapper := wrappers.NewMockWrapper()
+  mockWrapper := telemeters.NewMockWrapper()
   mockBusinessLogic := &util.MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{"result1", "result2"}, nil)
 
@@ -41,7 +42,7 @@ func Test_UnreliableDependency_WithTraceSpanOtel_Success(t *testing.T) {
 }
 
 func Test_UnreliableDependency_WithTraceSpanOtel_Error(t *testing.T) {
-  mockWrapper := wrappers.NewMockWrapper()
+  mockTelemeter := telemeters.NewMockWrapper()
   mockBusinessLogic := &util.MockBusinessLogic{}
   mockBusinessLogic.On("Execute", mock.Anything, mock.Anything).Return([]any{nil}, fmt.Errorf("an error occurred"))
 

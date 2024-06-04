@@ -3,20 +3,22 @@ package witho11y
 import (
   "context"
   "fmt"
+
+  "witho11y/pkg"
 )
 
 type PrintScreen struct {
-  events []EventData
+  events []witho11y.EventData
 }
 
 func NewPrintScreen() *PrintScreen {
   return &PrintScreen{
-    events: []EventData{},
+    events: []witho11y.EventData{},
   }
 }
 
 func (p *PrintScreen) Setup(ctx context.Context, name string) context.Context {
-  event := EventData{Name: name, Fields: make(map[string]interface{}), Ended: false}
+  event := witho11y.EventData{Name: name, Fields: make(map[string]interface{}), Ended: false}
   p.events = append(p.events, event)
   fmt.Printf("Setup: %s\n", name)
   ctx = context.WithValue(ctx, "eventName", name)
@@ -45,6 +47,6 @@ func (p *PrintScreen) Finish(ctx context.Context) {
   fmt.Printf("Finish: %s\n", eventName)
 }
 
-func (p *PrintScreen) GetEvents() []EventData {
+func (p *PrintScreen) GetEvents() []witho11y.EventData {
   return p.events
 }

@@ -4,7 +4,7 @@ import (
   "context"
 )
 
-type TelemetryEvents interface {
+type Telemeter interface {
   Setup(ctx context.Context, name string) context.Context
   AddFields(ctx context.Context, fields map[string]interface{})
   Finish(ctx context.Context)

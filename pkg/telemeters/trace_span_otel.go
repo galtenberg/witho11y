@@ -6,6 +6,8 @@ import (
   "fmt"
   "sync"
 
+  "witho11y/pkg"
+
   "go.opentelemetry.io/otel"
   "go.opentelemetry.io/otel/trace"
   "go.opentelemetry.io/otel/attribute"
@@ -13,14 +15,14 @@ import (
 
 type OTelTraceWrapper struct {
   tracer trace.Tracer
-  events []EventData
+  events []witho11y.EventData
   mu     sync.Mutex
 }
 
 func NewOTelTraceWrapper() *OTelTraceWrapper {
   return &OTelTraceWrapper{
     tracer: otel.Tracer("example-tracer"),
-    events: []EventData{},
+    events: []witho11y.EventData{},
   }
 }
 
@@ -28,7 +30,7 @@ func (o *OTelTraceWrapper) Setup(ctx context.Context, name string) context.Conte
   var span trace.Span
   ctx, span = o.tracer.Start(ctx, name)
   o.mu.Lock()
-  o.events = append(o.events, EventData{Name: name, Fields: make(map[string]interface{}), Ended: false})
+  o.events = append(o.events, witho11y.EventData{Name: name, Fields: make(map[string]interface{}), Ended: false})
   o.mu.Unlock()
   ctx = context.WithValue(ctx, "spanName", name)
   return context.WithValue(ctx, "span", span)
@@ -68,7 +70,7 @@ func (o *OTelTraceWrapper) Finish(ctx context.Context) {
   }
 }
 
-func (o *OTelTraceWrapper) GetEvents() []EventData {
+func (o *OTelTraceWrapper) GetEvents() []witho11y.EventData {
   o.mu.Lock()
   defer o.mu.Unlock()
   return o.events
